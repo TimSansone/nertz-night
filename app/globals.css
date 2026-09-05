@@ -15,3 +15,16 @@
 @media(max-width:620px){.topbar{min-height:82px;gap:15px;padding:17px 20px}.brand{font-size:24px;gap:10px}.brand small{font-size:9px;letter-spacing:.16em}.brand-mark{width:38px;height:38px}.header-actions{gap:8px}.target-control{font-size:12px;gap:6px}.target-control input{width:60px;height:38px}.new-game{width:38px;height:38px;padding:0;font-size:0}.new-game svg{width:16px;height:16px}.app-shell{padding-inline:20px}.score-grid{grid-template-columns:1fr;gap:17px}.score-card{padding:18px 20px 21px}.score-inputs{grid-template-columns:minmax(0,1fr) 15px minmax(0,1fr) 65px;gap:10px}.round-heading p{max-width:360px}.table-heading{gap:8px}.table-heading h2{font-size:15px}.formula{font-size:12px;gap:5px}.save-row{position:sticky;bottom:0;z-index:4;margin-inline:-20px;padding:16px 20px 20px;background:#103c32ed;border-top:1px solid #5b795b88;backdrop-filter:blur(10px);flex-direction:column-reverse;gap:13px}.save-button{width:100%}.save-row p{font-size:12px}.scoreboard{padding:24px 20px}.standings{grid-template-columns:1fr}.round-heading{margin-bottom:25px}.table-status-line{min-width:8px}.table-status{gap:10px}.table-status>svg{display:none}}
 @media(max-width:380px){.topbar{padding-inline:15px;gap:10px}.brand{font-size:21px}.brand-mark{display:none}.app-shell{padding-inline:15px}.score-card{padding-inline:14px}.score-inputs{gap:6px;grid-template-columns:minmax(0,1fr) 12px minmax(0,1fr) 55px}.save-row{margin-inline:-15px;padding-inline:15px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Keep score labels above their controls even when a card is narrow. */
+.score-inputs > label { display: flex; flex-direction: column; min-width: 0; white-space: normal; }
+.score-inputs input { display: block; width: 100%; min-width: 0; box-sizing: border-box; }
+.round-result { min-width: 0; }
+@media (max-width: 800px) {
+  .score-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 380px) {
+  .score-inputs { grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr); }
+  .round-result { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+  .round-result .round-score { margin-top: 0; min-width: 72px; }
+}
