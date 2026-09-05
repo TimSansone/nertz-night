@@ -11,7 +11,8 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
     "format": "oxfmt",
-    "build:pages": "vite build --config vite.pages.config.ts"
+    "build:pages": "vite build --config vite.pages.config.ts",
+    "build:vercel": "vite build --config vite.pages.config.ts --base /"
   },
   "dependencies": {
     "react": "19.2.6",
