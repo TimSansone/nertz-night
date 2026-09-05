@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Crown, Plus, RotateCcw, Sparkles, Trash2, Trophy } from 'lucide-react';
+import { Crown, Plus, RotateCcw, Sparkles, Trash2, Trophy, Club, Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -49,33 +49,33 @@ export default function Home() {
 
   return <main className="min-h-screen bg-background text-foreground">
     <header className="topbar">
-      <div className="brand"><span className="brand-mark"><Sparkles size={18} /></span><span>Nertz Night</span></div>
+      <div className="brand"><span className="brand-mark"><Club size={24} /></span><span>Nertz Night<small>THE SCOREKEEPER</small></span></div>
       <div className="header-actions">
         <label className="target-control">Play to <Input aria-label="Winning score" type="number" min={1} value={target} onChange={(e) => setTarget(Math.max(1, Number(e.target.value)))} /></label>
-        <Button variant="outline" className="new-game" onClick={newGame}><RotateCcw /> New game</Button>
+        <Button variant="outline" className="new-game" aria-label="Start a new game" onClick={newGame}><RotateCcw /> New game</Button>
       </div>
     </header>
     <div className="app-shell">
       <section className="workspace">
-        <div className="eyebrow">Round {rounds.length + 1}</div>
-        <div className="round-heading"><div><h1>Count ’em up.</h1><p>Enter each player’s cards out and cards left in their Nertz pile.</p></div><div className="formula"><span>Cards out</span><b>−</b><span>2 × Nertz left</span><b>= score</b></div></div>
+        <div className="table-status"><span className="round-badge">ROUND {String(rounds.length + 1).padStart(2, '0')}</span><span>{players.length} players at the table</span><span className="table-status-line" /><Club size={17} aria-hidden="true" /></div>
+        <div className="round-heading"><div><h1>Count ’em up.</h1><p>Enter each player’s cards out and cards left in their Nertz pile.</p></div></div><div className="table-heading"><h2>This round’s scores</h2><div className="formula"><span>Cards out</span><b>−</b><span>2 × Nertz left</span><b>= score</b></div></div>
         <div className="score-grid">
           {players.map((player, index) => {
             const out = outCards[player.id] ?? 0, left = nertzLeft[player.id] ?? 0, score = out - left * 2;
             return <article className="score-card" key={player.id} style={{ '--player-color': COLORS[index % COLORS.length] } as React.CSSProperties}>
-              <div className="player-row"><span className="player-dot" /><Input className="player-name" aria-label={`Name for player ${index + 1}`} value={player.name} onChange={(e) => setPlayers((current) => current.map((p) => p.id === player.id ? { ...p, name: e.target.value } : p))} /><Button aria-label={`Remove ${player.name}`} title="Remove player" variant="ghost" size="icon" onClick={() => setPlayers((current) => current.filter((p) => p.id !== player.id))} disabled={players.length <= 2}><Trash2 /></Button></div>
-              <div className="score-inputs"><label>Cards out<Input inputMode="numeric" type="number" min={0} value={out || ''} placeholder="0" onChange={(e) => updateNumber(setOutCards, player.id, e.target.value)} /></label><span className="math-symbol">−</span><label>Nertz left<Input inputMode="numeric" type="number" min={0} value={left || ''} placeholder="0" onChange={(e) => updateNumber(setNertzLeft, player.id, e.target.value)} /></label><span className="round-score">{score > 0 ? '+' : ''}{score}</span></div>
+              <div className="card-meta"><span>PLAYER {String(index + 1).padStart(2, '0')}</span><span>{player.total} total pts</span></div><div className="player-row"><span className="player-dot">{(player.name.trim() || 'P').slice(0, 1).toUpperCase()}</span><Input className="player-name" aria-label={`Name for player ${index + 1}`} value={player.name} onChange={(e) => setPlayers((current) => current.map((p) => p.id === player.id ? { ...p, name: e.target.value } : p))} /><Button aria-label={`Remove ${player.name}`} title="Remove player" variant="ghost" size="icon" onClick={() => setPlayers((current) => current.filter((p) => p.id !== player.id))} disabled={players.length <= 2}><Trash2 /></Button></div>
+              <div className="score-inputs"><label>Cards out<Input inputMode="numeric" type="number" min={0} value={out || ''} placeholder="0" onChange={(e) => updateNumber(setOutCards, player.id, e.target.value)} /></label><span className="math-symbol">−</span><label>Nertz left<Input inputMode="numeric" type="number" min={0} value={left || ''} placeholder="0" onChange={(e) => updateNumber(setNertzLeft, player.id, e.target.value)} /></label><div className="round-result"><span>Round</span><strong className={score < 0 ? 'round-score negative' : 'round-score'}>{score > 0 ? '+' : ''}{score}</strong></div></div>
             </article>;
           })}
           {players.length < 8 && <button className="add-player" onClick={() => setPlayers((current) => [...current, { id: crypto.randomUUID(), name: `Player ${current.length + 1}`, total: 0 }])}><Plus /> Add player</button>}
         </div>
-        <div className="save-row"><p>Scores save on this device automatically.</p><Button className="save-button" size="lg" onClick={saveRound}>Save round <span>→</span></Button></div>
+        <div className="save-row"><p><Check size={16} /> Automatic saving on this device</p><Button className="save-button" size="lg" onClick={saveRound}>Save round {rounds.length + 1} <ArrowRight size={18} /></Button></div>
       </section>
       <aside className="scoreboard">
-        <div className="scoreboard-title"><div><span className="eyebrow">Game board</span><h2>Race to {target}</h2></div><Trophy /></div>
-        <div className="standings">{[...players].sort((a, b) => b.total - a.total).map((player, index) => {
+        <div className="scoreboard-title"><div><span className="eyebrow">THE STANDINGS</span><h2>Race to {target}</h2></div><Trophy /></div>
+        <div className="board-caption"><span>PLAYER</span><span>TOTAL POINTS</span></div><div className="standings">{[...players].sort((a, b) => b.total - a.total).map((player, index) => {
           const originalIndex = players.findIndex((p) => p.id === player.id), progress = Math.min(100, Math.max(0, player.total / target * 100));
-          return <div className="standing" key={player.id}><div className="standing-head"><span className="rank">{index === 0 && rounds.length ? <Crown size={15} /> : index + 1}</span><span className="standing-name"><i style={{ background: COLORS[originalIndex % COLORS.length] }} />{player.name || `Player ${originalIndex + 1}`}</span><strong>{player.total}</strong></div><div className="progress"><span style={{ width: `${progress}%`, background: COLORS[originalIndex % COLORS.length] }} /></div></div>;
+          return <div className={`standing ${index === 0 && rounds.length ? 'is-leading' : ''}`} key={player.id}><div className="standing-head"><span className="rank">{index === 0 && rounds.length ? <Crown size={15} /> : index + 1}</span><span className="standing-name"><i style={{ background: COLORS[originalIndex % COLORS.length] }} />{player.name || `Player ${originalIndex + 1}`}</span><strong>{player.total}</strong></div><div className="progress"><span style={{ width: `${progress}%`, background: COLORS[originalIndex % COLORS.length] }} /></div></div>;
         })}</div>
         <div className="round-history"><div className="history-head"><h3>Round history</h3><Button variant="ghost" size="sm" onClick={undoRound} disabled={!rounds.length}><RotateCcw /> Undo</Button></div>
           {!rounds.length ? <div className="empty-history"><span>♣</span><p>Your scores will land here after round one.</p></div> : <div className="history-list">{[...rounds].reverse().map((round, reverseIndex) => <div className="history-round" key={round.id}><strong>Round {rounds.length - reverseIndex}</strong><div>{players.map((player) => { const score = round.scores.find((s) => s.playerId === player.id)?.score; return score === undefined ? null : <span key={player.id}>{player.name} <b className={score < 0 ? 'negative' : ''}>{score > 0 ? '+' : ''}{score}</b></span>; })}</div></div>)}</div>}
