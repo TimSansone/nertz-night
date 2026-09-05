@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Crown, Plus, RotateCcw, Sparkles, Trash2, Trophy, Club, Check, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { calculateRoundScore, recalculateGame } from '@/lib/scoring';
 
 type Player = { id: string; name: string; total: number };
 type RoundScore = { playerId: string; out: number; nertzLeft: number; score: number };
@@ -24,7 +25,7 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem('nertz-scorekeeper');
-    if (saved) try { const game = JSON.parse(saved); setPlayers(game.players ?? DEFAULT_PLAYERS); setRounds(game.rounds ?? []); setTarget(game.target ?? 100); } catch {}
+    if (saved) try { const game = JSON.parse(saved); const corrected = recalculateGame(game.players ?? DEFAULT_PLAYERS, game.rounds ?? []); setPlayers(corrected.players); setRounds(corrected.rounds); setTarget(game.target ?? 100); } catch {}
     setReady(true);
   }, []);
   useEffect(() => { if (ready) localStorage.setItem('nertz-scorekeeper', JSON.stringify({ players, rounds, target })); }, [players, rounds, target, ready]);
@@ -32,7 +33,7 @@ export default function Home() {
   const leader = useMemo(() => [...players].sort((a, b) => b.total - a.total)[0], [players]);
   const updateNumber = (setter: React.Dispatch<React.SetStateAction<Record<string, number>>>, id: string, value: string) => setter((current) => ({ ...current, [id]: Math.max(0, Number.parseInt(value || '0', 10)) }));
   function saveRound() {
-    const scores = players.map((player) => { const out = outCards[player.id] ?? 0; const left = nertzLeft[player.id] ?? 0; return { playerId: player.id, out, nertzLeft: left, score: out - left * 2 }; });
+    const scores = players.map((player) => { const out = outCards[player.id] ?? 0; const left = nertzLeft[player.id] ?? 0; return { playerId: player.id, out, nertzLeft: left, score: calculateRoundScore(out, left) }; });
     setRounds((current) => [...current, { id: crypto.randomUUID(), scores }]);
     setPlayers((current) => current.map((player) => ({ ...player, total: player.total + (scores.find((score) => score.playerId === player.id)?.score ?? 0) })));
     setOutCards({}); setNertzLeft({});
@@ -58,10 +59,10 @@ export default function Home() {
     <div className="app-shell">
       <section className="workspace">
         <div className="table-status"><span className="round-badge">ROUND {String(rounds.length + 1).padStart(2, '0')}</span><span>{players.length} players at the table</span><span className="table-status-line" /><Club size={17} aria-hidden="true" /></div>
-        <div className="round-heading"><div><h1>Count ’em up.</h1><p>Enter each player’s cards out and cards left in their Nertz pile.</p></div></div><div className="table-heading"><h2>This round’s scores</h2><div className="formula"><span>Cards out</span><b>−</b><span>2 × Nertz left</span><b>= score</b></div></div>
+        <div className="round-heading"><div><h1>Count ’em up.</h1><p>Enter each player’s cards out and cards left in their Nertz pile.</p></div></div><div className="table-heading"><h2>This round’s scores</h2><div className="formula"><span>Cards out</span><b>−</b><span>Cards left</span><b>= score</b></div></div>
         <div className="score-grid">
           {players.map((player, index) => {
-            const out = outCards[player.id] ?? 0, left = nertzLeft[player.id] ?? 0, score = out - left * 2;
+            const out = outCards[player.id] ?? 0, left = nertzLeft[player.id] ?? 0, score = calculateRoundScore(out, left);
             return <article className="score-card" key={player.id} style={{ '--player-color': COLORS[index % COLORS.length] } as React.CSSProperties}>
               <div className="card-meta"><span>PLAYER {String(index + 1).padStart(2, '0')}</span><span>{player.total} total pts</span></div><div className="player-row"><span className="player-dot">{(player.name.trim() || 'P').slice(0, 1).toUpperCase()}</span><Input className="player-name" aria-label={`Name for player ${index + 1}`} value={player.name} onChange={(e) => setPlayers((current) => current.map((p) => p.id === player.id ? { ...p, name: e.target.value } : p))} /><Button aria-label={`Remove ${player.name}`} title="Remove player" variant="ghost" size="icon" onClick={() => setPlayers((current) => current.filter((p) => p.id !== player.id))} disabled={players.length <= 2}><Trash2 /></Button></div>
               <div className="score-inputs"><label>Cards out<Input inputMode="numeric" type="number" min={0} value={out || ''} placeholder="0" onChange={(e) => updateNumber(setOutCards, player.id, e.target.value)} /></label><span className="math-symbol">−</span><label>Nertz left<Input inputMode="numeric" type="number" min={0} value={left || ''} placeholder="0" onChange={(e) => updateNumber(setNertzLeft, player.id, e.target.value)} /></label><div className="round-result"><span>Round</span><strong className={score < 0 ? 'round-score negative' : 'round-score'}>{score > 0 ? '+' : ''}{score}</strong></div></div>
